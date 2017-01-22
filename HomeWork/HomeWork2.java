@@ -20,8 +20,8 @@ public class HomeWork2 {
 				int sum = 0;
 
 				for (int i:scores) {
-					i = scan.nextInt();
-					sum += i;
+					scores[i] = scan.nextInt();
+					sum += scores[i];
 				}
 
 				int avg = sum / scores.length;
