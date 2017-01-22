@@ -19,14 +19,20 @@ public class HomeWork2 {
 				int[] scores = new int[5];
 				int sum = 0;
 
-				for (int i:scores) {
+				for (int i = 0; i < 5; i++) {
 					scores[i] = scan.nextInt();
 					sum += scores[i];
 				}
 
+				System.out.print("입력한 숫자 : [ ");
+				for (int score:scores) {
+					System.out.print(score + " ");
+				}
+				System.out.print("]");
+
 				int avg = sum / scores.length;
 
-				System.out.println("SUM : " + sum + " AVG : "+ avg);
+				System.out.println("\nSUM : " + sum + ", AVG : "+ avg);
 
 			}
 			else if (input == 2) {
