@@ -53,14 +53,14 @@ public class Seller {
 	 * @return : boolean 재고가 있으면 false, 없으면 true. 
 	 */
 	public boolean isSoldOut() {
-		boolean isSoldOut = this.productQuantity == 0;
+		boolean isSoldOut = basketVO.getProductQuantity() == 0;
 		return isSoldOut;
 	}
 	
 	@Override
 	public String toString() {
 		String message = String.format("판매자의 상품 개수 : %d, "
-				+ "판매자가 가진 금액 : %d", this.productQuantity, this.money);
+				+ "판매자가 가진 금액 : %d", basketVO.getProductQuantity(), this.money);
 		return message;
 	}
 
