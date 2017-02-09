@@ -12,7 +12,7 @@ public class HRController {
 	}
 
 	public void start() {
-		hrBiz.printAllEmployeesWithDepartments();
+		hrBiz.printAllDepartments();
 	}
 	
 	public static void main(String[] args) {

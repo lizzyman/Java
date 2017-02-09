@@ -2,6 +2,7 @@ package com.ktds.lizzy.hr.biz;
 
 import com.ktds.lizzy.hr.dao.HRDao;
 import com.ktds.lizzy.hr.dao.HRDaoImpl;
+import com.ktds.lizzy.hr.vo.CountriesVO;
 import com.ktds.lizzy.hr.vo.DepartmentVO;
 import com.ktds.lizzy.hr.vo.EmployeesVO;
 
@@ -74,6 +75,58 @@ public class HRBizImpl implements HRBiz {
 			System.out.println();
 					
 		}
+	}
+	
+	@Override
+	public void printAllDepartmentsWithLocations() {
+		List<DepartmentVO> allDepartments = hrDao.getAllDepartmentsWithLocations();
+
+		for (DepartmentVO departmentVO : allDepartments) {
+			System.out.printf("%d\t%20s\t%d\t%d\t%d\t%20s\t%20s\t%20s\t%20s\t%s",
+					departmentVO.getDepartmentId(),
+					departmentVO.getDepartmentName(),
+					departmentVO.getManagerId(),
+					departmentVO.getLocationId(),
+					departmentVO.getLocationVo().getLocationId(),
+					departmentVO.getLocationVo().getStreetAddress(),
+					departmentVO.getLocationVo().getPostalCode(),
+					departmentVO.getLocationVo().getCity(),
+					departmentVO.getLocationVo().getStateProvince(),
+					departmentVO.getLocationVo().getCountryId());
+			System.out.println();
+		}
+		
+	}
+
+	@Override
+	public void printAllCountriesWithRegions() {
+		List<CountriesVO> countries = hrDao.getAllCountriesWithRegions();
+		for (CountriesVO country : countries) {
+			System.out.printf("%20s\t%20s\t%d\t%d\t%20s",
+					country.getCountryId(),
+					country.getCountryName(),
+					country.getRegionId(),
+					country.getRegionVO().getRegionId(),
+					country.getRegionVO().getRegionName());
+			System.out.println();
+		}
+	}
+
+	@Override
+	public void printOneEmployee() {
+		EmployeesVO employee = hrDao.findOneEmployee(102);
+		System.out.printf("%d\t%20s\t%20s\t%f\t%d\t%20s\t%20s\t%20s\t%d\t%20s\t%d"
+				,employee.getEmployeeId()
+				,employee.getFirstName()
+				,employee.getLastName()
+				,employee.getCommissionPct()
+				,employee.getDepartmentId()
+				,employee.getEmail()
+				,employee.getHireDate()
+				,employee.getJobId()
+				,employee.getManagerId()
+				,employee.getPhoneNumber()
+				,employee.getSalary());
 	}
 	
 }

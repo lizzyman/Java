@@ -3,342 +3,224 @@ package com.ktds.lizzy.hr.dao;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import com.ktds.lizzy.dao.support.JDBCDaoSupport;
+import com.ktds.lizzy.dao.support.QueryHandler;
+import com.ktds.lizzy.dao.support.annotation.BindData;
 import com.ktds.lizzy.hr.vo.*;
 
-public class HRDaoImpl implements HRDao {
+public class HRDaoImpl extends JDBCDaoSupport implements HRDao {
 	
  @Override
     public List<EmployeesVO> getAllEmployees() {
-        // 1. Oracle driver loading
-        try {
-            // Instances of the class Class represent classes and interfaces in
-            // a running Java application.
-            // ¿Ü¿ì±â
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-        } catch (ClassNotFoundException e) {
-            System.out.println("¿À¶óÅ¬ µå¶óÀÌ¹ö ·Îµù ½ÇÆĞ. ½Ã½ºÅÛ Á¾·á.");
-            return null;
-        }
-        // 2. "DB¿¡ ¿¬°áÀ»ÇÏ°í, Äõ¸®¸¦ ´øÁö°í(½ÇÇà), ±× °á°ú¸¦ ¹Ş¾Æ¿À±â"
-        // 2-1. JDBC Instance »ı¼º
-        /**
-         * java +ÆÄÀÌÇÁ(Äõ¸®,µ¥ÀÌÅÍ°¡ StreamÇü½ÄÀ¸·Î ±³È¯. ¸Ş¸ğ¸®¸¦ È¸¼öÇÏÁö ¾ÊÀ¸¸é x)+ oracle È¸¼ö¸¦ ÇÏ±âÀ§ÇØ
-         * ¾Æ·¡¿Í°°ÀÌ ¹Û¿¡ ¼±¾ğÇÏ°í null·Î ¼±¾ğÇØµĞ°Í.
-         */
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        // 2-2. Oracle instance¿¡ ¿¬°á
-        // oracleUrl ¿Ü¿ì±â: windows´Â localhost / ¿À¶óÅ¬ port: 1521
-        // mac os : ÀÚ½ÅÀÇ IPÁÖ¼Ò
-        String oracleUrl = "jdbc:oracle:thin:@localhost:1521:XE";
-        try {
-            conn = DriverManager.getConnection(oracleUrl, "hr", "chzhqhf486");
-            // 2-3. Query¸¦ ¸¸µç´Ù.
-            String query =
-                    // µû¿ÈÇ¥¿Í ±ÛÀÚ »çÀÌ¿¡¼­ ¶ç¿ö¾²±â ÇØÁÖ±â. error ¹ß»ı.
-                    " SELECT  " + " EMPLOYEE_ID, FIRST_NAME, LAST_NAME,  " + "   EMAIL, PHONE_NUMBER, HIRE_DATE,  "
-                            + "   JOB_ID, SALARY, COMMISSION_PCT,  " + "   MANAGER_ID, DEPARTMENT_ID "
-                            + " FROM HR.EMPLOYEES ";
-            // 2-4. Query¸¦ ½ÇÇàÇÑ´Ù.
-            stmt = conn.prepareStatement(query);
-            // 2-5. Query ½ÇÇà °á°ú¸¦ ¾ò¾î¿Â´Ù.
-            rs = stmt.executeQuery();
-            // 2-5-1. Query ½ÇÇà °á°ú¸¦ List°´Ã¼¿¡ ÇÒ´çÇÑ´Ù.
-            // next() : ÇÑÁÙ ¾¿ ¾ò¾î¿Â´Ù. / ÇÑÁÙ¾¿ List¿¡ ³Ö¾îÁÖ±â.
-            EmployeesVO employeesVO = null;
-            List<EmployeesVO> employees = new ArrayList<EmployeesVO>();
-            while (rs.next()) {
-                // 2-5-2 rowÀÇ Á¤º¸¸¦ employeesVO¿¡ ¼¼ÆÃÇÑ´Ù.
-                employeesVO = new EmployeesVO();
-                employeesVO.setEmployeeId(rs.getInt("EMPLOYEE_ID"));
-                employeesVO.setCommissionPct(rs.getDouble("COMMISSION_PCT"));
-                employeesVO.setDepartmentId(rs.getInt("DEPARTMENT_ID"));
-                /**
-                 * java.sql.SQLException: ºÎÀûÇÕÇÑ ¿­ ÀÌ¸§ ¿À¶óÅ¬ ÀÎ½ºÅÏ½º¿¡ ¿¬°á ½ÇÆĞ. ½Ã½ºÅÛ Á¾·á. at
-                 * oracle.jdbc.driver.OracleStatement.getColumnIndex(OracleStatement.java:3724)
-                 * at
-                 * oracle.jdbc.driver.OracleResultSetImpl.findColumn(OracleResultSetImpl.java:2799)
-                 * at
-                 * oracle.jdbc.driver.OracleResultSet.getString(OracleResultSet.java:498)
-                 * at
-                 * com.ktds.ronanam.hr.dao.HRDaoImpl.getAllEmployees(HRDaoImpl.java:70)
-                 * at com.ktds.ronanam.hr.Main.main(Main.java:20) Exception in
-                 * thread "main" java.lang.NullPointerException at
-                 * com.ktds.ronanam.hr.Main.main(Main.java:21)
-                 */
-                // ÄÃ·³¸íÀ» Àß¸ø ÀûÀ½. ¿ÀÅ¸
-                employeesVO.setEmail(rs.getString("EMAIL"));
-                employeesVO.setFirstName(rs.getString("FIRST_NAME"));
-                employeesVO.setHireDate(rs.getString("HIRE_DATE"));
-                /**
-                 * java.sql.SQLException: ³»ºÎ Ç¥±â·Î º¯È¯ÇÒ ¼ö ¾ø½À´Ï´Ù ¿À¶óÅ¬ ÀÎ½ºÅÏ½º¿¡ ¿¬°á ½ÇÆĞ. ½Ã½ºÅÛ
-                 * Á¾·á. at
-                 * oracle.jdbc.driver.CharCommonAccessor.getInt(CharCommonAccessor.java:147)
-                 * at
-                 * oracle.jdbc.driver.T4CVarcharAccessor.getInt(T4CVarcharAccessor.java:830)
-                 * at
-                 * oracle.jdbc.driver.OracleResultSetImpl.getInt(OracleResultSetImpl.java:942)
-                 * at
-                 * oracle.jdbc.driver.OracleResultSet.getInt(OracleResultSet.java:438)
-                 * at
-                 * com.ktds.ronanam.hr.dao.HRDaoImpl.getAllEmployees(HRDaoImpl.java:83)
-                 * at com.ktds.ronanam.hr.Main.main(Main.java:20) Exception in
-                 * thread "main" java.lang.NullPointerException at
-                 * com.ktds.ronanam.hr.Main.main(Main.java:21)
-                 */
-                // Job_id´Â StringÀÎµ¥ java¿¡¼­ int·Î ÇØÁÜ
-                employeesVO.setJobId(rs.getString("JOB_ID"));
-                employeesVO.setLastName(rs.getString("LAST_NAME"));
-                employeesVO.setManagerId(rs.getInt("MANAGER_ID"));
-                employeesVO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
-                employeesVO.setSalary(rs.getInt("SALARY"));
-                // 2-5-3 employees¿¡ employeesVO¿¡ addÇÑ´Ù.
-                employees.add(employeesVO);
-            }
-            /**
-             * returnÀ» ¸¸³ª¸é, returnÀ»ÇÏ°í Á¾·á°¡ µÇ´Âµ¥, finally°¡ ÀÖÀ¸¸é finally¸¦ ½ÇÇàÇÏ°í Á¾·áÇÑ´Ù.
-             * while()¹®À¸·Î ´Ù ÀĞ¾î¿ÔÀ¸¸é, list¸¦ returnÇØÁà¾ßÇÏ´Âµ¥, ³ª´Â ¿©±â¿¡ ¸®ÅÏ¹®À» Àû¾îÁÖÁö ¾Ê¾Æ¼­
-             * nullPointerException ¹ß»ı
-             */
-            return employees;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("¿À¶óÅ¬ ÀÎ½ºÅÏ½º¿¡ ¿¬°á ½ÇÆĞ. ½Ã½ºÅÛ Á¾·á.");
-            return null; // try/catch¹® ÀÌ±â ¶§¹®¿¡ Àß ½ÇÇàµÇ¾îµµ ¹İÈ¯ ¾Æ´Ï¾îµµ ¹İÈ¯ÇÑ´Ù.
-        } finally {
-            // ¿­¾ú´ø ¹İ´ë ¼ø¼­·Î ´İ¾ÆÁà¾ßÇÑ´Ù.
-            // ¿¹¿ÜÃ³¸® °¢°¢ °É¾îÁà¾ßÇÑ´Ù.
-            // rs¸¦ ´İ´Ù°¡ ¿¡·¯°¡³ª¸é ¹«½ÃÇÏ°í stmt¸¦ ´İ¾Æ¶ó. ¶Ç ´İ´Ù°¡ ¿¡·¯³ª¸é ¹«½ÃÇÏ°í connÀ» ´İ¾Æ¶ó
-            // ±×·¯¸é ¸¸³¯ ¼ö ÀÖ´Â error°¡ nullpointerException
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (SQLException e) {
-            }
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e) {
-            }
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-            }
-        }
-        /**
-         * ¸Ç Ã³À½¿¡ nullÀÌ ÇÒ´çµÇ¾îÀÖ´Âµ¥, conn = class.getName();ÇÏ´Ù°¡ ¿À·ù°¡ ¹ß»ıÇÏ¸é catch¹®À¸·Î
-         * ÀÌµ¿ÇÏ°Ô µÇ´Âµ¥ ÀÌ¶§´Â if¹®¿¡ °É¸®Áö ¾Ê±â ¶§¹®¿¡ ¾Æ¹«°Íµµ ÇÏÁö ¾Ê°í Á¾·á. Äõ¸®¹®À» ¼öÇàÇÏ°í³ª¸é nullÀÌ ¾Æ´Ï±â ¶§¹®¿¡
-         * ÀÚ¿øÀ» È¸¼ö ¹× close();
-         */
+	 	
+	    return selectList(new QueryHandler() { // Anonymous Class (ìµëª… í´ë˜ìŠ¤) : ì¸í„°í˜ì´ìŠ¤ë¥¼ ê°ì²´í™” ì‹œí‚¤ëŠ” ë°©ë²• (ì›ë˜ ì¸í„°í˜ì´ìŠ¤ëŠ” ê°ì²´í™” x)
+
+			@Override
+			public String preparedQuery() {
+				String query =
+	                    // ë”°ì˜´í‘œì™€ ê¸€ì ì‚¬ì´ì—ì„œ ë„ì›Œì“°ê¸° í•´ì£¼ê¸°. error ë°œìƒ.
+	                    " SELECT  " + " EMPLOYEE_ID, FIRST_NAME, LAST_NAME,  " + "   EMAIL, PHONE_NUMBER, HIRE_DATE,  "
+	                            + "   JOB_ID, SALARY, COMMISSION_PCT,  " + "   MANAGER_ID, DEPARTMENT_ID "
+	                            + " FROM HR.EMPLOYEES ";
+				return query;
+			}
+
+			@Override
+			public void mappingParameters(PreparedStatement stmt) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public Object getData(ResultSet rs) {
+				EmployeesVO employeesVO = new EmployeesVO();
+				BindData.bindData(rs, employeesVO);
+				return employeesVO;
+			}
+	    	
+	    });
+        
     }
 	
 	@Override
 	public List<DepartmentVO> getAllDepartments() {
-		//1. Oracle Driver Loading.
-		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver"); //ACL : Auto Class Loading = °´Ã¼¸¦ ºÒ·¯¿Â´Ù. (¸Ş¸ğ¸®¿¡ °´Ã¼¸¦ ¿Ã·ÁµÒ)
-		} catch(ClassNotFoundException e) {
-			System.out.println("¿À¶óÅ¬ µå¶óÀÌ¹ö ·Îµù ½ÇÆĞ! ½Ã½ºÅÛ Á¾·á");
-			return null;
-		}
 		
-		//2. JDBC Instance »ı¼º
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-		
-		//3. Oracle InstanceÀÇ ¿¬°á
-		try {
-			String oracleUrl = "jdbc:oracle:thin:@localhost:1521:XE"; // windows : loacalhost , mac : ÀÚ±â ip ÁÖ¼Ò, oracle port num = 1521
-			conn = DriverManager.getConnection(oracleUrl, "hr", "chzhqhf486");
+		return selectList(new QueryHandler() {
 			
-			//4. Äõ¸®¸¦ ¸¸µç´Ù.
-			String query = " SELECT  " +
-					"   DEPARTMENT_ID, DEPARTMENT_NAME, MANAGER_ID,  " +
-					"   LOCATION_ID " +
-					"   FROM HR.DEPARTMENTS" +
-					"   ORDER BY DEPARTMENT_ID DESC"; // Äõ¸® -> StringÈ­ : ctrl + m
-		
-			//5. Äõ¸®¸¦ ½ÇÇàÇÑ´Ù.
-			stmt = conn.prepareStatement(query);
-			
-			//6. Äõ¸®ÀÇ ½ÇÇà°á°ú¸¦ ¾ò¾î¿Â´Ù.
-			rs = stmt.executeQuery();
-			
-			//6-1. Äõ¸®ÀÇ ½ÇÇà°á°ú¸¦ List °´Ã¼¿¡ ÇÒ´çÇÑ´Ù.
-			
-			DepartmentVO departmentVO = null;
-			List<DepartmentVO> departments = new ArrayList<DepartmentVO>();
-			
-			while (rs.next()) {
-				//6-2. ROWÀÇ Á¤º¸¸¦ employees¿¡ ¼¼ÆÃÇÑ´Ù.
-				
-				departmentVO = new DepartmentVO();
-				departmentVO.setDepartmentId(rs.getInt("DEPARTMENT_ID"));
-				departmentVO.setDepartmentName(rs.getString("DEPARTMENT_NAME"));
-				departmentVO.setManagerId(rs.getInt("MANAGER_ID"));
-				departmentVO.setLocationId(rs.getInt("LOCATION_ID"));
-				
-				//6-3. employees¿¡ employeesVO¸¦ addÇÑ´Ù.
-				departments.add(departmentVO);
+			@Override
+			public String preparedQuery() {
+				String query = " SELECT  " +
+						"   DEPARTMENT_ID, DEPARTMENT_NAME, MANAGER_ID,  " +
+						"   LOCATION_ID " +
+						"   FROM HR.DEPARTMENTS" +
+						"   ORDER BY DEPARTMENT_ID DESC";
+				return query;
 			}
-			//7. return ÇÑ´Ù.
-			return departments;
 			
-		} catch(SQLException e) {
-			System.out.println("Oracle ÀÎ½ºÅÏ½º¿¡ ¿¬°áÇÏÁö ¸øÇß½À´Ï´Ù. ½Ã½ºÅÛ Á¾·á");
-			return null;
-		} finally {
-			try {
-				if (rs != null) {
-					rs.close();
-				}
-			} catch(SQLException e) {
+			@Override
+			public void mappingParameters(PreparedStatement stmt) {
+				// TODO Auto-generated method stub
 				
 			}
-			try {
-				if (stmt != null) {
-					stmt.close();
-				}
-			} catch(SQLException e) {
-				
+			
+			@Override
+			public Object getData(ResultSet rs) {
+				DepartmentVO departmentVO = new DepartmentVO();
+				BindData.bindData(rs, departmentVO);
+				return departmentVO;
 			}
-			try {
-				if (conn != null) {
-					conn.close();
-				}
-			} catch(SQLException e) {
-				
-			}
-		}
+		});
 		
 	}
 
 	@Override
 	public List<EmployeesVO> getAllEmployeesWithDepartments() {
-		 // 1. Oracle driver loading
-        try {
-            // Instances of the class Class represent classes and interfaces in
-            // a running Java application.
-            // ¿Ü¿ì±â
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-        } catch (ClassNotFoundException e) {
-            System.out.println("¿À¶óÅ¬ µå¶óÀÌ¹ö ·Îµù ½ÇÆĞ. ½Ã½ºÅÛ Á¾·á.");
-            return null;
-        }
-        // 2. "DB¿¡ ¿¬°áÀ»ÇÏ°í, Äõ¸®¸¦ ´øÁö°í(½ÇÇà), ±× °á°ú¸¦ ¹Ş¾Æ¿À±â"
-        // 2-1. JDBC Instance »ı¼º
-        /**
-         * java +ÆÄÀÌÇÁ(Äõ¸®,µ¥ÀÌÅÍ°¡ StreamÇü½ÄÀ¸·Î ±³È¯. ¸Ş¸ğ¸®¸¦ È¸¼öÇÏÁö ¾ÊÀ¸¸é x)+ oracle È¸¼ö¸¦ ÇÏ±âÀ§ÇØ
-         * ¾Æ·¡¿Í°°ÀÌ ¹Û¿¡ ¼±¾ğÇÏ°í null·Î ¼±¾ğÇØµĞ°Í.
-         */
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        // 2-2. Oracle instance¿¡ ¿¬°á
-        // oracleUrl ¿Ü¿ì±â: windows´Â localhost / ¿À¶óÅ¬ port: 1521
-        // mac os : ÀÚ½ÅÀÇ IPÁÖ¼Ò
-        String oracleUrl = "jdbc:oracle:thin:@localhost:1521:XE";
-        try {
-            conn = DriverManager.getConnection(oracleUrl, "hr", "chzhqhf486");
-            // 2-3. Query¸¦ ¸¸µç´Ù.
-            String query =
-            		// µû¿ÈÇ¥¿Í ±ÛÀÚ »çÀÌ¿¡¼­ ¶ç¿ö¾²±â ÇØÁÖ±â. error ¹ß»ı.
-            		" SELECT  E.EMPLOYEE_ID, E.FIRST_NAME, E.LAST_NAME,  " 
-            				+ "   E.EMAIL, E.PHONE_NUMBER, E.HIRE_DATE,  "
-            		        + "   E.JOB_ID, E.SALARY, E.COMMISSION_PCT,  " 
-            				+ "   E.MANAGER_ID, E.DEPARTMENT_ID,  "
-            		        + "   D.DEPARTMENT_ID D_DEPARTMENT_ID, D.DEPARTMENT_NAME, D.MANAGER_ID, D.LOCATION_ID"
-            		        + " FROM EMPLOYEES E, "
-            		        + " DEPARTMENTS D "
-            		        + " WHERE E.DEPARTMENT_ID = D.DEPARTMENT_ID ";
-            // 2-4. Query¸¦ ½ÇÇàÇÑ´Ù.
-            stmt = conn.prepareStatement(query);
-            // 2-5. Query ½ÇÇà °á°ú¸¦ ¾ò¾î¿Â´Ù.
-            rs = stmt.executeQuery();
-            // 2-5-1. Query ½ÇÇà °á°ú¸¦ List°´Ã¼¿¡ ÇÒ´çÇÑ´Ù.
-            // next() : ÇÑÁÙ ¾¿ ¾ò¾î¿Â´Ù. / ÇÑÁÙ¾¿ List¿¡ ³Ö¾îÁÖ±â.
-            EmployeesVO employeesVO = null;
-           
-            List<EmployeesVO> employees = new ArrayList<EmployeesVO>();
-            while (rs.next()) {
-                // 2-5-2 rowÀÇ Á¤º¸¸¦ employeesVO¿¡ ¼¼ÆÃÇÑ´Ù.
-                employeesVO = new EmployeesVO();
-                
-                employeesVO.setEmployeeId(rs.getInt("EMPLOYEE_ID"));
-                employeesVO.setCommissionPct(rs.getDouble("COMMISSION_PCT"));
-                employeesVO.setDepartmentId(rs.getInt("DEPARTMENT_ID"));
-               
-                // ÄÃ·³¸íÀ» Àß¸ø ÀûÀ½. ¿ÀÅ¸
-                employeesVO.setEmail(rs.getString("EMAIL"));
-                employeesVO.setFirstName(rs.getString("FIRST_NAME"));
-                employeesVO.setHireDate(rs.getString("HIRE_DATE"));
-               
-                // Job_id´Â StringÀÎµ¥ java¿¡¼­ int·Î ÇØÁÜ
-                employeesVO.setJobId(rs.getString("JOB_ID"));
-                employeesVO.setLastName(rs.getString("LAST_NAME"));
-                employeesVO.setManagerId(rs.getInt("MANAGER_ID"));
-                employeesVO.setPhoneNumber(rs.getString("PHONE_NUMBER"));
-                employeesVO.setSalary(rs.getInt("SALARY"));
-                employeesVO.getDepartments().setDepartmentId(rs.getInt("D_DEPARTMENT_ID"));
-                employeesVO.getDepartments().setDepartmentName(rs.getString("DEPARTMENT_NAME"));
-                employeesVO.getDepartments().setManagerId(rs.getInt("MANAGER_ID"));
-                employeesVO.getDepartments().setLocationId(rs.getInt("LOCATION_ID"));
-                
-                // 2-5-3 employees¿¡ employeesVO¿¡ addÇÑ´Ù.
-                employees.add(employeesVO);
-            }
-            /**
-             * returnÀ» ¸¸³ª¸é, returnÀ»ÇÏ°í Á¾·á°¡ µÇ´Âµ¥, finally°¡ ÀÖÀ¸¸é finally¸¦ ½ÇÇàÇÏ°í Á¾·áÇÑ´Ù.
-             * while()¹®À¸·Î ´Ù ÀĞ¾î¿ÔÀ¸¸é, list¸¦ returnÇØÁà¾ßÇÏ´Âµ¥, ³ª´Â ¿©±â¿¡ ¸®ÅÏ¹®À» Àû¾îÁÖÁö ¾Ê¾Æ¼­
-             * nullPointerException ¹ß»ı
-             */
-            return employees;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("¿À¶óÅ¬ ÀÎ½ºÅÏ½º¿¡ ¿¬°á ½ÇÆĞ. ½Ã½ºÅÛ Á¾·á.");
-            return null; // try/catch¹® ÀÌ±â ¶§¹®¿¡ Àß ½ÇÇàµÇ¾îµµ ¹İÈ¯ ¾Æ´Ï¾îµµ ¹İÈ¯ÇÑ´Ù.
-        } finally {
-            // ¿­¾ú´ø ¹İ´ë ¼ø¼­·Î ´İ¾ÆÁà¾ßÇÑ´Ù.
-            // ¿¹¿ÜÃ³¸® °¢°¢ °É¾îÁà¾ßÇÑ´Ù.
-            // rs¸¦ ´İ´Ù°¡ ¿¡·¯°¡³ª¸é ¹«½ÃÇÏ°í stmt¸¦ ´İ¾Æ¶ó. ¶Ç ´İ´Ù°¡ ¿¡·¯³ª¸é ¹«½ÃÇÏ°í connÀ» ´İ¾Æ¶ó
-            // ±×·¯¸é ¸¸³¯ ¼ö ÀÖ´Â error°¡ nullpointerException
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (SQLException e) {
-            }
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e) {
-            }
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-            }
-        }
-        /**
-         * ¸Ç Ã³À½¿¡ nullÀÌ ÇÒ´çµÇ¾îÀÖ´Âµ¥, conn = class.getName();ÇÏ´Ù°¡ ¿À·ù°¡ ¹ß»ıÇÏ¸é catch¹®À¸·Î
-         * ÀÌµ¿ÇÏ°Ô µÇ´Âµ¥ ÀÌ¶§´Â if¹®¿¡ °É¸®Áö ¾Ê±â ¶§¹®¿¡ ¾Æ¹«°Íµµ ÇÏÁö ¾Ê°í Á¾·á. Äõ¸®¹®À» ¼öÇàÇÏ°í³ª¸é nullÀÌ ¾Æ´Ï±â ¶§¹®¿¡
-         * ÀÚ¿øÀ» È¸¼ö ¹× close();
-         */
+		
+		return selectList(new QueryHandler() {
+
+			@Override
+			public String preparedQuery() {
+				String query =
+						// ë”°ì˜´í‘œì™€ ê¸€ì ì‚¬ì´ì—ì„œ ë„ì›Œì“°ê¸° í•´ì£¼ê¸°. error ë°œìƒ.
+						" SELECT  E.EMPLOYEE_ID, E.FIRST_NAME, E.LAST_NAME,  " 
+								+ "   E.EMAIL, E.PHONE_NUMBER, E.HIRE_DATE,  "
+								+ "   E.JOB_ID, E.SALARY, E.COMMISSION_PCT,  " 
+								+ "   E.MANAGER_ID, E.DEPARTMENT_ID,  "
+						 		+ "   D.DEPARTMENT_ID D_DEPARTMENT_ID, D.DEPARTMENT_NAME, D.MANAGER_ID, D.LOCATION_ID"
+						 		+ " FROM EMPLOYEES E, "
+						 		+ " DEPARTMENTS D "
+						 		+ " WHERE E.DEPARTMENT_ID = D.DEPARTMENT_ID ";
+				return query;
+			}
+
+			@Override
+			public void mappingParameters(PreparedStatement stmt) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public Object getData(ResultSet rs) {
+				EmployeesVO employeesVO = new EmployeesVO();
+				BindData.bindData(rs, employeesVO);
+				BindData.bindData(rs, employeesVO.getDepartments());
+				return employeesVO;
+			}
+			
+		});
+		
+	}
+
+	@Override
+	public List<DepartmentVO> getAllDepartmentsWithLocations() {
+		
+		return selectList(new QueryHandler() {
+			
+			@Override
+			public String preparedQuery() {
+				String query = "SELECT  " +
+						"   D.DEPARTMENT_ID, D.DEPARTMENT_NAME, D.MANAGER_ID, D.LOCATION_ID D_LOCATION_ID, " +
+						"   L.LOCATION_ID L_LOCATION_ID, L.STREET_ADDRESS, L.POSTAL_CODE,  " +
+						"   L.CITY, L.STATE_PROVINCE, L.COUNTRY_ID " +
+						"   FROM DEPARTMENTS D, LOCATIONS L " +
+						"   WHERE D.LOCATION_ID = L.LOCATION_ID ";
+				return query;
+			}
+			
+			@Override
+			public void mappingParameters(PreparedStatement stmt) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public Object getData(ResultSet rs) {
+				DepartmentVO departmentVO = new DepartmentVO();
+				BindData.bindData(rs, departmentVO);
+				BindData.bindData(rs, departmentVO.getLocationVo());
+				return departmentVO;
+			}
+		});
+		
+	}
+
+	@Override
+	public List<CountriesVO> getAllCountriesWithRegions() {
+		
+		return selectList(new QueryHandler() {
+			
+			@Override
+			public String preparedQuery() {
+				String query = "SELECT  " +
+						"C.COUNTRY_ID, C.COUNTRY_NAME, C.REGION_ID C_REGION_ID, R.REGION_ID R_REGION_ID, R.REGION_NAME " +
+						"FROM    COUNTRIES C, REGIONS R " +
+						"WHERE   C.REGION_ID = R.REGION_ID ";
+				return query;
+			}
+			
+			@Override
+			public void mappingParameters(PreparedStatement stmt) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public Object getData(ResultSet rs) {
+				CountriesVO countryVO = new CountriesVO();
+				BindData.bindData(rs, countryVO);
+				BindData.bindData(rs, countryVO.getRegionVO());
+				return countryVO;
+			}
+		});
+		
+	}
+
+	@Override
+	public EmployeesVO findOneEmployee(int employeeId) {
+		
+		return (EmployeesVO) selectOne(new QueryHandler() {
+			
+			@Override
+			public String preparedQuery() {
+				StringBuffer query = new StringBuffer(); // String = ë¶ˆë©´, StringBuffer = ê°€ë³€
+				query.append(" SELECT	EMPLOYEE_ID ");
+				query.append(" 			, FIRST_NAME ");
+				query.append(" 			, LAST_NAME ");
+				query.append(" 			, EMAIL ");
+				query.append(" 			, PHONE_NUMBER ");
+				query.append(" 			, JOB_ID ");
+				query.append(" 			, HIRE_DATE ");
+				query.append(" 			, SALARY ");
+				query.append(" 			, COMMISSION_PCT ");
+				query.append(" 			, MANAGER_ID ");
+				query.append(" 			, DEPARTMENT_ID ");
+				query.append(" FROM		EMPLOYEES ");
+				query.append(" WHERE	EMPLOYEE_ID = ? ");
+				return query.toString();
+			}
+			
+			@Override
+			public void mappingParameters(PreparedStatement stmt) throws SQLException {
+				stmt.setInt(1, employeeId); // 1ë²ˆì§¸ indexì—ê²Œë¡œ ê°’ ì „ë‹¬ (indexê°€ 0ì´ ì‹œì‘ì¸ ê²ƒ : ë°°ì—´, ë¦¬ìŠ¤íŠ¸ ë¿!)	
+			}
+			
+			@Override
+			public Object getData(ResultSet rs) {
+				EmployeesVO employeeVO = new EmployeesVO();
+				BindData.bindData(rs, employeeVO);
+				return employeeVO;
+			}
+		});
+		
 	}
 }
+
 
 
 

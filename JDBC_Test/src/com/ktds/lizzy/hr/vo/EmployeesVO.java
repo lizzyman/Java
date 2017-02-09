@@ -1,20 +1,33 @@
 package com.ktds.lizzy.hr.vo;
 
+import com.ktds.lizzy.dao.support.annotation.Types;
+
 public class EmployeesVO {
 	
+	@Types
 	private int employeeId;
+	@Types
 	private String firstName;
+	@Types
 	private String lastName;
+	@Types
 	private String email;
+	@Types
 	private String phoneNumber;
-	private String hireDate; // ³¯Â¥´Â StringÀ¸·Î ¹ŞÀ½
+	@Types
+	private String hireDate; // ë‚ ì§œëŠ” Stringìœ¼ë¡œ ë°›ìŒ
+	@Types
 	private String jobId;
+	@Types
 	private int salary;
+	@Types
 	private double commissionPct;
+	@Types
 	private int managerId;
+	@Types
 	private int departmentId;
 	
-	private DepartmentVO departments; // JOINÀ» Ç¥ÇöÇÏ´Â ¹æ¹ı (EMPLOYEES X DEPARTMENTS)
+	private DepartmentVO departments; // JOINì„ í‘œí˜„í•˜ëŠ” ë°©ë²• (EMPLOYEES X DEPARTMENTS)
 	
 	public int getEmployeeId() {
 		return employeeId;

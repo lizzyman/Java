@@ -1,11 +1,19 @@
 package com.ktds.lizzy.hr.vo;
 
+import com.ktds.lizzy.dao.support.annotation.Types;
+
 public class DepartmentVO {
-	
+
+	@Types(alias="D_DEPARTMENT_ID")
 	private int departmentId;
+	@Types
 	private String departmentName;
+	@Types(alias="D_MANAGER_ID")
 	private int managerId;
+	@Types
 	private int locationId;
+
+	private LocationsVO locationVO; 
 	
 	public int getDepartmentId() {
 		return departmentId;
@@ -37,6 +45,17 @@ public class DepartmentVO {
 	
 	public void setLocationId(int locationId) {
 		this.locationId = locationId;
+	}
+	
+	public LocationsVO getLocationVo() {
+		if (locationVO == null) {
+			locationVO = new LocationsVO();
+		}
+		return locationVO;
+	}
+
+	public void setLocationVo(LocationsVO locationVO) {
+		this.locationVO = locationVO;
 	}
 	
 }

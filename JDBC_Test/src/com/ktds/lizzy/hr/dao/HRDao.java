@@ -7,4 +7,10 @@ public interface HRDao {
 	public List<DepartmentVO> getAllDepartments();
 	
 	public List<EmployeesVO> getAllEmployeesWithDepartments();
+	
+	public List<DepartmentVO> getAllDepartmentsWithLocations();
+	
+	public List<CountriesVO> getAllCountriesWithRegions();
+	
+	public EmployeesVO findOneEmployee(int employeeId);
 }
