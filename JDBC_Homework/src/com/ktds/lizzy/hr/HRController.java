@@ -11,7 +11,7 @@ public class HRController {
 	}
 	
 	public void start() {
-		//hrBiz.printAllDepartments();
+		hrBiz.printAllCountriesWithRegions();
 	}
 	
 	public static void main(String[] args) {

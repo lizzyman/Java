@@ -1,10 +1,16 @@
 package com.ktds.lizzy.hr.vo;
 
+import com.ktds.lizzy.hr.dao.support.annotation.Types;
+
 public class CountriesVO {
 	
+	@Types
 	private String countryId;
+	@Types
 	private String countryName;
+	@Types
 	private int regionId;
+	
 	private RegionsVO regionVO;
 	
 	public String getCountryId() {
